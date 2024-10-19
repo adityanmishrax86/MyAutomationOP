@@ -3,13 +3,16 @@ package SeleniumDev.WebForm;
 import BasePageFactory.AbstractPage;
 import Utils.BasicUtilities;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.FindBys;
 import org.openqa.selenium.support.How;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.time.Duration;
 import java.util.List;
 
 public class WebForm extends AbstractPage {
@@ -44,6 +47,12 @@ public class WebForm extends AbstractPage {
     @FindBy(id = "my-radio-1")
     WebElement myRadio2;
 
+    @FindBy(name = "my-date")
+    WebElement myDate;
+
+    @FindBy(name = "my-range")
+    WebElement myRange;
+
     @FindBy(tagName = "button")
     WebElement button;
 
@@ -68,18 +77,18 @@ public class WebForm extends AbstractPage {
 
     public void checkDisabledElement() {
         if(myDisabledInput.isEnabled()) {
-            System.out.println("The element is enabled");
+            logger.info("The element is enabled");
         } else
-            System.out.println("The element is disabled");
-        System.out.printf("Value: %s\n", myDisabledInput.getAttribute("placeholder"));
+            logger.info("The element is disabled");
+        logger.info("Disabled Element Value: %s\n", myDisabledInput.getAttribute("placeholder"));
     }
 
     public void checkReadonlyElement() {
         if(myReadonlyInput.isDisplayed()) {
-            System.out.println("The element is displayed");
+            logger.info("The element is displayed");
         } else
-            System.out.println("The element is not displayed");
-        System.out.printf("Value: %s\n", myReadonlyInput.getAttribute("value"));
+            logger.info("The element is not displayed");
+        logger.info("Read only Value: %s\n", myReadonlyInput.getAttribute("value"));
     }
 
     public void selectRandomOption() {
@@ -88,24 +97,27 @@ public class WebForm extends AbstractPage {
         if(!selectOptions.isEmpty()) {
             int index = (int) (Math.random() * selectOptions.size());
             select.selectByVisibleText(selectOptions.get(index).getText());
-            System.out.printf("Selected option: %s\n", selectOptions.get(index).getText());
+            logger.info("Selected option: %s\n", selectOptions.get(index).getText());
         }
     }
 
     public void selectRandomDataList() {
         WebElement myDatalist = findElement(By.cssSelector("[placeholder='Type to search...']"));
-        clickElement(myDatalist);
-        List<WebElement> myDataLists = findElements(By.xpath("//datalist/option"));
-        if(!myDataLists.isEmpty()) {
-            int index = (int) (Math.random() * myDataLists.size());
-            if(!findElements(By.xpath(String.format("//datalist/option[contains(@value,'%s')]", myDataLists.get(index).getAttribute("value")))).isEmpty()) {
-                fillInput(myDatalist, myDataLists.get(index).getAttribute("value"));
+        if(null != myDatalist) {
+            clickElement(myDatalist);
+            List<WebElement> myDataLists = findElements(By.xpath("//datalist/option"));
+            if (!myDataLists.isEmpty()) {
+                int index = (int) (Math.random() * myDataLists.size());
+                if (!findElements(By.xpath(String.format("//datalist/option[contains(@value,'%s')]", myDataLists.get(index).getAttribute("value")))).isEmpty()) {
+                    fillInput(myDatalist, myDataLists.get(index).getAttribute("value"));
+                }
+                logger.info("Selected option from DataList: %s\n", myDataLists.get(index).getAttribute("value"));
             }
-            System.out.printf("Selected option: %s\n", myDataLists.get(index).getAttribute("value"));
-        }
+        } else
+            System.out.println("Datalist is null");
     }
 
-    public void chechRadioAndCheckbox() {
+    public void checkRadioAndCheckbox() {
         clickElement(myCheck1);
         clickElement(myCheck2);
         clickElement(myRadio1);
@@ -118,12 +130,35 @@ public class WebForm extends AbstractPage {
     }
 
 
-    public void clickButton() {
+    public void selectDatePicker() {
+        String randomDate = BasicUtilities.generateRandomDate("dd");
+        clickElement(myDate);
+        WebElement datePicker = findElement(By.xpath(String.format("//div[contains(@class,'datepicker-days')]//tr//td[contains(text(),'%s')]", randomDate)));
+        if(null != datePicker)
+            datePicker.click();
+
+        findElement(By.tagName("h1")).click();
+    }
+
+    public void selectRange()  {
+            executeJavascript("arguments[0].value = arguments[1];", myRange, 7);
+            logger.info(myRange.getAttribute("value"));
+    }
+
+    public void clickSubmitButton() {
         clickElement(button);
     }
 
-
-
-
+    public void validateDataSubmittedOrNot() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        try {
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("message")));
+            WebElement receivedData = findElement(By.id("message"));
+            logger.info("Received data: {}", receivedData.getText());
+            logger.info("Current URL: {}", driver.getCurrentUrl());
+        } catch (TimeoutException e) {
+            logger.error("No data received");
+        }
+    }
 
 }

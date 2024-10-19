@@ -2,26 +2,35 @@ package Controllers;
 
 import SeleniumDev.WebForm.WebForm;
 import Utils.BrowserUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
+
 
 public class WebFormController {
 
     WebForm webForm;
     WebDriver driver;
+    Logger logger = LogManager.getLogger(WebFormController.class);
 
     public WebFormController() {
         this.webForm = new WebForm(BrowserUtils.getInstance().getDriver());
         this.driver = BrowserUtils.getInstance().getDriver();
     }
 
+    /**
+     * Opens the web form url in the browser
+     */
     public void initial() {
-        if(null != driver)
+        if(null != driver) {
+            // Open the web form page
             driver.get("https://www.selenium.dev/selenium/web/web-form.html");
-        else {
-            System.out.println("Driver is null");
+            logger.info("Navigating to URL: {}", driver.getCurrentUrl());
+        } else {
+            logger.log(Level.DEBUG, "Driver is null. Exiting...");
             System.exit(1);
         }
-
     }
 
     public void fillUpAllInputField() {
@@ -32,8 +41,11 @@ public class WebFormController {
         webForm.checkReadonlyElement();
         webForm.selectRandomOption();
         webForm.selectRandomDataList();
-        webForm.chechRadioAndCheckbox();
+        webForm.checkRadioAndCheckbox();
         webForm.selectColorPicker();
-        webForm.clickButton();
+        webForm.selectDatePicker();
+        webForm.selectRange();
+        webForm.clickSubmitButton();
+        webForm.validateDataSubmittedOrNot();
     }
 }

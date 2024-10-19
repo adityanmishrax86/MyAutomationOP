@@ -1,9 +1,9 @@
 package StepDefs;
 
 import Controllers.WebFormController;
-import SeleniumDev.WebForm.WebForm;
 import Utils.BrowserUtils;
 
+import Utils.Configurator;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -12,14 +12,22 @@ import io.cucumber.java.en.When;
 
 import org.openqa.selenium.WebDriver;
 
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+
 
 public class BaseFeatureStep {
 
     @Before
     public void setUp() {
+        try {
+            Configurator.readConfigProperties();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
         System.out.println("Setting up browser");
-        BrowserUtils.getInstance().setBrowser("firefox");
+        BrowserUtils.getInstance().setBrowser(Configurator.getProperty("browser"));
     }
 
     @After
@@ -38,12 +46,12 @@ public class BaseFeatureStep {
 
     @When("I eat some")
     public void iEatCukes() {
-        System.out.println("I eat %d cukes\n");
+        System.out.println("I eat some cukes\n");
     }
 
     @Then("my belly should growl")
     public void iShouldHaveCukesInMyBelly() {
-        System.out.println("I should have %d cukes in my belly\n");
+        System.out.println("I should have some more cukes in my belly\n");
     }
 
 
